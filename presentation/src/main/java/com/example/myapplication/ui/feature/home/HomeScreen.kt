@@ -2,6 +2,7 @@ package com.example.myapplication.ui.feature.home
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +29,8 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +52,23 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState = viewModel.uiState.collectAsState()
+    val loading = remember {
+        mutableStateOf(false)
+    }
+    val error = remember {
+        mutableStateOf<String?>(null)
+    }
+    val featuredProducts = remember {
+        mutableStateOf<List<Product>>(emptyList())
+
+    }
+    val popularProducts = remember {
+        mutableStateOf<List<Product>>(emptyList())
+
+    }
+    val categories = remember {
+        mutableStateOf<List<String>>(emptyList())
+    }
 
     Scaffold {
         Surface(
@@ -58,18 +78,32 @@ fun HomeScreen(
         ) {
             when (uiState.value) {
                 is HomeScreenUIEvents.Loading -> {
-                    CircularProgressIndicator()
+                    loading.value = true
+                    error.value = null
                 }
 
                 is HomeScreenUIEvents.Success -> {
+                    loading.value = false
+                    error.value = null
                     val data = (uiState.value as HomeScreenUIEvents.Success)
-                    HomeContent(data.featuredProducts, data.popularProducts, data.categories)
+                    featuredProducts.value = data.featuredProducts
+                    popularProducts.value = data.popularProducts
+                    categories.value = data.categories
                 }
 
                 is HomeScreenUIEvents.Error -> {
-                    Text(text = (uiState.value as HomeScreenUIEvents.Error).message)
+                    loading.value = false
+                    val errorMsg = (uiState.value as HomeScreenUIEvents.Error).message
+                    error.value = errorMsg
                 }
             }
+            HomeContent(
+                featuredProducts = featuredProducts.value,
+                popularProducts = popularProducts.value,
+                categories = categories.value,
+                isLoading = loading.value,
+                errorMsg = error.value
+            )
         }
     }
 }
@@ -117,7 +151,13 @@ fun ProfileHeader() {
 }
 
 @Composable
-fun HomeContent(featured: List<Product>, popularProducts: List<Product>, categories: List<String>) {
+fun HomeContent(
+    featuredProducts: List<Product>,
+    popularProducts: List<Product>,
+    categories: List<String>,
+    isLoading: Boolean = false,
+    errorMsg: String? = null
+) {
     LazyColumn {
         item {
             ProfileHeader()
@@ -126,6 +166,19 @@ fun HomeContent(featured: List<Product>, popularProducts: List<Product>, categor
             Spacer(modifier = Modifier.size(16.dp))
         }
         item {
+            if (isLoading) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(50.dp))
+                    Text(text = "Loading...", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            errorMsg?.let {
+                Text(text = it, style = MaterialTheme.typography.bodyMedium)
+            }
             if(categories.isNotEmpty()) {
                 LazyRow {
                     items(categories) { category ->
@@ -144,8 +197,8 @@ fun HomeContent(featured: List<Product>, popularProducts: List<Product>, categor
                 }
                 Spacer(modifier = Modifier.size(16.dp))
             }
-            if (featured.isNotEmpty()) {
-                HomeProductRow(products = featured, title = "Featured")
+            if (featuredProducts.isNotEmpty()) {
+                HomeProductRow(products = featuredProducts, title = "Featured")
                 Spacer(modifier = Modifier.size(16.dp))
             }
             if (popularProducts.isNotEmpty()) {
