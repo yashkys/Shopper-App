@@ -1,5 +1,9 @@
 package com.example.myapplication.ui.feature.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.domain.model.Category
 import com.example.domain.model.Product
 import com.example.myapplication.R
 import org.koin.androidx.compose.koinViewModel
@@ -67,7 +73,7 @@ fun HomeScreen(
 
     }
     val categories = remember {
-        mutableStateOf<List<String>>(emptyList())
+        mutableStateOf<List<Category>>(emptyList())
     }
 
     Scaffold {
@@ -154,7 +160,7 @@ fun ProfileHeader() {
 fun HomeContent(
     featuredProducts: List<Product>,
     popularProducts: List<Product>,
-    categories: List<String>,
+    categories: List<Category>,
     isLoading: Boolean = false,
     errorMsg: String? = null
 ) {
@@ -179,20 +185,31 @@ fun HomeContent(
             errorMsg?.let {
                 Text(text = it, style = MaterialTheme.typography.bodyMedium)
             }
-            if(categories.isNotEmpty()) {
+            if (categories.isNotEmpty()) {
                 LazyRow {
-                    items(categories) { category ->
-                        Text(
-                            text = category.replaceFirstChar { it.uppercase() },
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.primary)
-                                .padding(8.dp)
-                        )
+                    items(
+                        categories,
+                        key = {it.id}
+                    ) { category ->
+                        val isVisible = remember {
+                            mutableStateOf(false)
+                        }
+                        LaunchedEffect(true) {
+                            isVisible.value = true
+                        }
+                        AnimatedVisibility(visible =  isVisible.value, enter = fadeIn()+ expandVertically()) {
+                            Text(
+                                text = category.title.replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .padding(8.dp)
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.size(16.dp))
@@ -268,8 +285,19 @@ fun HomeProductRow(products: List<Product>, title: String) {
         }
         Spacer(modifier = Modifier.size(8.dp))
         LazyRow {
-            items(products) { product ->
-                ProductItem(product = product)
+            items(
+                products,
+                key = {it.id}
+            ) { product ->
+                val isVisible = remember {
+                    mutableStateOf(false)
+                }
+                LaunchedEffect(true) {
+                    isVisible.value = true
+                }
+                AnimatedVisibility(visible =  isVisible.value, enter = fadeIn()+ expandHorizontally()) {
+                    ProductItem(product = product)
+                }
             }
         }
     }

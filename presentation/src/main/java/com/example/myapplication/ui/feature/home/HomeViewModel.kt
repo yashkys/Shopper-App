@@ -3,6 +3,7 @@ package com.example.myapplication.ui.feature.home
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.domain.model.Category
 import com.example.domain.model.Product
 import com.example.domain.network.ResultWrapper
 import com.example.domain.usecase.GetCategoryUseCase
@@ -26,10 +27,10 @@ class HomeViewModel(
     private fun getAllProducts() {
         viewModelScope.launch {
             _uiState.value = HomeScreenUIEvents.Loading
-            val featuredProducts = getProducts("electronics")
-            val popularProducts = getProducts("jewelery")
+            val featuredProducts = getProducts(1)
+            val popularProducts = getProducts(2)
             val categories = getCategories()
-            if (featuredProducts.isEmpty() || popularProducts.isEmpty() || categories.isEmpty()) {
+            if (featuredProducts.isEmpty() || popularProducts.isEmpty() /*|| categories.isNotEmpty()*/) {
                 _uiState.value = HomeScreenUIEvents.Error("Failed to load products")
                 return@launch
             }
@@ -40,11 +41,12 @@ class HomeViewModel(
             )
         }
     }
-    private suspend fun getCategories(): List<String> {
+    private suspend fun getCategories(): List<Category> {
         categoryUseCase.execute().let { result ->
             when(result) {
                 is ResultWrapper.Success -> {
-                    return (result).value
+                    Log.i("APP data", result.value.toString())
+                    return (result).value.categories
                 }
 
                 is ResultWrapper.Failure -> {
@@ -57,7 +59,7 @@ class HomeViewModel(
     }
 
     private suspend fun getProducts(
-        category: String? = null
+        category: Int? = null
     ): List<Product> {
         productUseCase.execute(category).let { result ->
             when (result) {
@@ -65,7 +67,7 @@ class HomeViewModel(
                     Log.i("APP data", result.value.toString())
 //                    val data = (result as ResultWrapper.Success).value
 //                    _uiState.value = HomeScreenUIEvents.Success(data)
-                    return (result).value
+                    return (result).value.products
                 }
 
                 is ResultWrapper.Failure -> {
@@ -86,7 +88,7 @@ sealed class HomeScreenUIEvents {
     data class Success(
         val featuredProducts: List<Product>,
         val popularProducts: List<Product>,
-        val categories: List<String>,
+        val categories: List<Category>,
     ) : HomeScreenUIEvents()
     data class Error(val message: String) : HomeScreenUIEvents()
 
