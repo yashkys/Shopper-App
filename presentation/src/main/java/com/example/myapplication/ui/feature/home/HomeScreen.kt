@@ -63,7 +63,7 @@ fun HomeScreen(
 
                 is HomeScreenUIEvents.Success -> {
                     val data = (uiState.value as HomeScreenUIEvents.Success)
-                    HomeContent(data.featuredProducts, data.popularProducts)
+                    HomeContent(data.featuredProducts, data.popularProducts, data.categories)
                 }
 
                 is HomeScreenUIEvents.Error -> {
@@ -117,7 +117,7 @@ fun ProfileHeader() {
 }
 
 @Composable
-fun HomeContent(featured: List<Product>, popularProducts: List<Product>) {
+fun HomeContent(featured: List<Product>, popularProducts: List<Product>, categories: List<String>) {
     LazyColumn {
         item {
             ProfileHeader()
@@ -126,6 +126,24 @@ fun HomeContent(featured: List<Product>, popularProducts: List<Product>) {
             Spacer(modifier = Modifier.size(16.dp))
         }
         item {
+            if(categories.isNotEmpty()) {
+                LazyRow {
+                    items(categories) { category ->
+                        Text(
+                            text = category.replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.primary)
+                                .padding(8.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.size(16.dp))
+            }
             if (featured.isNotEmpty()) {
                 HomeProductRow(products = featured, title = "Featured")
                 Spacer(modifier = Modifier.size(16.dp))
