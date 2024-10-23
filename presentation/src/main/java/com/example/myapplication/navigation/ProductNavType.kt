@@ -6,6 +6,7 @@ import androidx.annotation.RequiresApi
 import androidx.navigation.NavType
 import com.example.myapplication.model.UiProductModel
 import kotlinx.serialization.json.Json
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.Base64
 
@@ -22,9 +23,9 @@ val productNavType = object : NavType<UiProductModel>(isNullableAllowed = false)
     override fun parseValue(value: String): UiProductModel {
         val item = Json.decodeFromString<UiProductModel>(value)
         val decoded = item.copy(
-            image = URLEncoder.encode(item.image, "UTF-8"),
-            description = String(Base64.getDecoder().decode(item.description.toByteArray())).replace("/", "-"),
-            title = String(Base64.getDecoder().decode(item.description.toByteArray())).replace("/", "-")
+            image = URLDecoder.decode(item.image, "UTF-8"),
+            description = String(Base64.getDecoder().decode(item.description.replace("_", "/"))),
+            title = String(Base64.getDecoder().decode(item.title.replace("_", "/")))
         )
         return decoded
     }
