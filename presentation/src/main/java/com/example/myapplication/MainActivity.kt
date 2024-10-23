@@ -26,11 +26,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import com.example.myapplication.model.UiProductModel
 import com.example.myapplication.navigation.CartScreen
 import com.example.myapplication.navigation.HomeScreen
+import com.example.myapplication.navigation.ProductDetails
 import com.example.myapplication.navigation.ProfileScreen
+import com.example.myapplication.navigation.productNavType
 import com.example.myapplication.ui.feature.home.HomeScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import kotlin.reflect.typeOf
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,6 +67,15 @@ class MainActivity : ComponentActivity() {
                             composable<ProfileScreen>() {
                                 Box(modifier = Modifier.fillMaxSize()) {
                                     Text(text = "Profile")
+                                }
+                            }
+
+                            composable<ProductDetails>(
+                                typeMap = mapOf(typeOf<UiProductModel>() to productNavType)
+                            ) {
+                                val productRoute = it.toRoute<ProductDetails>()
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    Text(text = productRoute.product.title)
                                 }
                             }
                         }

@@ -6,6 +6,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,8 @@ import coil.compose.AsyncImage
 import com.example.domain.model.Category
 import com.example.domain.model.Product
 import com.example.myapplication.R
+import com.example.myapplication.model.UiProductModel
+import com.example.myapplication.navigation.ProductDetails
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -108,7 +111,12 @@ fun HomeScreen(
                 popularProducts = popularProducts.value,
                 categories = categories.value,
                 isLoading = loading.value,
-                errorMsg = error.value
+                errorMsg = error.value,
+                onClick = { product ->
+                    navController.navigate(
+                        ProductDetails(UiProductModel.fromProduct(product = product))
+                    )
+                }
             )
         }
     }
@@ -162,7 +170,8 @@ fun HomeContent(
     popularProducts: List<Product>,
     categories: List<Category>,
     isLoading: Boolean = false,
-    errorMsg: String? = null
+    errorMsg: String? = null,
+    onClick: (Product) -> Unit
 ) {
     LazyColumn {
         item {
@@ -215,11 +224,19 @@ fun HomeContent(
                 Spacer(modifier = Modifier.size(16.dp))
             }
             if (featuredProducts.isNotEmpty()) {
-                HomeProductRow(products = featuredProducts, title = "Featured")
+                HomeProductRow(
+                    products = featuredProducts,
+                    title = "Featured",
+                    onClick = onClick
+                )
                 Spacer(modifier = Modifier.size(16.dp))
             }
             if (popularProducts.isNotEmpty()) {
-                HomeProductRow(products = popularProducts, title = "Popular Products")
+                HomeProductRow(
+                    products = popularProducts,
+                    title = "Popular Products",
+                    onClick = onClick
+                )
             }
         }
     }
@@ -259,7 +276,11 @@ fun SearchBar(value: String, onTextChanged: (String) -> Unit) {
 }
 
 @Composable
-fun HomeProductRow(products: List<Product>, title: String) {
+fun HomeProductRow(
+    products: List<Product>,
+    title: String,
+    onClick: (Product) -> Unit
+) {
     Column {
         Box(
             modifier = Modifier
@@ -296,7 +317,10 @@ fun HomeProductRow(products: List<Product>, title: String) {
                     isVisible.value = true
                 }
                 AnimatedVisibility(visible =  isVisible.value, enter = fadeIn()+ expandHorizontally()) {
-                    ProductItem(product = product)
+                    ProductItem(
+                        product = product,
+                        onClick = onClick
+                    )
                 }
             }
         }
@@ -305,15 +329,21 @@ fun HomeProductRow(products: List<Product>, title: String) {
 
 
 @Composable
-fun ProductItem(product: Product) {
+fun ProductItem(
+    product: Product,
+    onClick: (Product) -> Unit
+) {
     Card(
         modifier = Modifier
             .padding(horizontal = 8.dp)
-            .size(width = 126.dp, height = 144.dp),
+            .size(width = 126.dp, height = 144.dp)
+            .clickable { onClick(product) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.LightGray.copy(alpha = 0.3f))
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
             AsyncImage(
                 model = product.image,
                 contentDescription = null,
