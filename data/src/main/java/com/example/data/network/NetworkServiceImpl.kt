@@ -1,10 +1,11 @@
 package com.example.data.network
 
-import com.example.data.model.CategoryDataModel
-import com.example.data.model.DataProductModel
+import com.example.data.model.request.AddToCartDataRequest
+import com.example.data.model.response.CartListResponse
 import com.example.data.model.response.CategoriesListResponse
 import com.example.data.model.response.ProductListResponse
-import com.example.domain.model.Product
+import com.example.domain.model.request.AddToCartRequest
+import com.example.domain.model.response.CartResponse
 import com.example.domain.model.response.CategoryResponse
 import com.example.domain.model.response.ProductResponse
 import com.example.domain.network.NetworkService
@@ -15,6 +16,7 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.header
 import io.ktor.client.request.request
+import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.Parameters
@@ -53,6 +55,29 @@ class NetworkServiceImpl (
         )
     }
 
+    override suspend fun addProductToCart(
+        request: AddToCartRequest
+    ): ResultWrapper<CartResponse> {
+        val url = "$baseUrl/cart/1"
+        return makeWebRequest(
+            url = url,
+            method = HttpMethod.Post,
+            body = AddToCartDataRequest.fromCartRequest(request),
+            mapper = { cartItem: CartListResponse ->
+                cartItem.toCart()
+            }
+        )
+    }
+
+    override suspend fun getCart(): ResultWrapper<CartResponse> {
+        val url = "$baseUrl/cart/1"
+        return makeWebRequest(url = url,
+            method = HttpMethod.Get,
+            mapper = { cartItem: CartListResponse ->
+                cartItem.toCart()
+            })
+    }
+
     @OptIn(InternalAPI::class)
     suspend inline fun<reified T,R> makeWebRequest(
         url: String,
@@ -80,7 +105,7 @@ class NetworkServiceImpl (
                 }
 
                 if(body!=null) {
-                    this.body = (body)
+                    setBody(body)
                 }
 
                 // set content type

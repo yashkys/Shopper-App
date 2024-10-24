@@ -37,6 +37,7 @@ import com.example.myapplication.navigation.HomeScreen
 import com.example.myapplication.navigation.ProductDetails
 import com.example.myapplication.navigation.ProfileScreen
 import com.example.myapplication.navigation.productNavType
+import com.example.myapplication.ui.feature.cart.CartScreen
 import com.example.myapplication.ui.feature.home.HomeScreen
 import com.example.myapplication.ui.feature.product_details.ProductDetailsScreen
 import com.example.myapplication.ui.theme.MyApplicationTheme
@@ -67,13 +68,12 @@ class MainActivity : ComponentActivity() {
                     ) {
                         NavHost(navController = navController, startDestination = HomeScreen) {
                             composable<HomeScreen>() {
+                                shouldShowBottomNav.value = true
                                 HomeScreen(navController)
                             }
                             composable<CartScreen>() {
                                 shouldShowBottomNav.value = true
-                                Box(modifier = Modifier.fillMaxSize()) {
-                                    Text(text = "Cart")
-                                }
+                                CartScreen(navController)
                             }
                             composable<ProfileScreen>() {
                                 shouldShowBottomNav.value = true
